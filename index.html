@@ -3,110 +3,344 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Supabase Demo</title>
+  <title>麵包店 FAQ 小幫手</title>
+  <style>
+    :root {
+      --bg: #fffaf2;
+      --panel: #fffdf8;
+      --primary: #a85f2d;
+      --primary-dark: #7e4114;
+      --accent: #f4d7b6;
+      --text: #2b1a12;
+      --muted: #7a625a;
+      --success: #2f7d4a;
+      --line: #f0e0cf;
+      --danger: #b54545;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(180deg, #fff6ee 0%, #fffaf3 100%);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 18px 60px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #f7d9ad 0%, #f3bf87 100%);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 26px 28px;
+      box-shadow: 0 8px 28px rgba(124, 81, 42, 0.08);
+      margin-bottom: 26px;
+    }
+
+    .header h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--primary-dark);
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 10px 22px rgba(143, 96, 50, 0.06);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 1.4rem;
+      color: var(--primary-dark);
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .faq-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffdfa;
+      overflow: hidden;
+    }
+
+    .faq-q {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 18px 18px;
+      text-align: left;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .faq-q span:first-child {
+      flex: 1;
+    }
+
+    .faq-q .toggle {
+      font-size: 1.1rem;
+      color: var(--primary);
+      transition: transform 0.2s ease;
+    }
+
+    .faq-item.open .faq-q .toggle {
+      transform: rotate(45deg);
+    }
+
+    .faq-a {
+      display: none;
+      padding: 0 18px 18px;
+      color: var(--muted);
+      line-height: 1.7;
+      border-top: 1px solid var(--line);
+      background: #fff9f3;
+    }
+
+    .faq-item.open .faq-a {
+      display: block;
+    }
+
+    .admin-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 0.96rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input, select, textarea, button {
+      font: inherit;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.98;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #c47b42 100%);
+      color: white;
+    }
+
+    .status {
+      min-height: 24px;
+      font-size: 0.95rem;
+      color: var(--success);
+      margin-top: 8px;
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>麵包店 FAQ 小幫手</h1>
+      <p>幫你快速回答常見問題，也方便後台管理常用內容。</p>
+    </header>
+
+    <main class="layout">
+      <section class="card">
+        <h2>常見問題</h2>
+        <div id="faqList" class="faq-list"></div>
+      </section>
+
+      <aside class="card">
+        <h2>後台管理</h2>
+        <form id="faqForm" class="admin-form">
+          <div>
+            <label for="category">分類</label>
+            <select id="category">
+              <option value="訂購">訂購</option>
+              <option value="付款">付款</option>
+              <option value="配送">配送</option>
+              <option value="商品">商品</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="question">問題</label>
+            <input id="question" type="text" placeholder="例如：可否預訂蛋糕？" />
+          </div>
+
+          <div>
+            <label for="answer">回答</label>
+            <textarea id="answer" placeholder="輸入這個問題的回答內容..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">新增 FAQ</button>
+        </form>
+
+        <div id="status" class="status" aria-live="polite"></div>
+      </aside>
+    </main>
+  </div>
+
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // 重要：這裡要用專案根網址，不是 /rest/v1/
     const supabaseUrl = "https://gqiixhloozoputwwdcwg.supabase.co";
     const supabaseAnonKey = "sb_publishable_QzmgYNGLkR_4n2T342z9jA_XUQek6i1";
-
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    const form = document.getElementById("profileForm");
-    const nameInput = document.getElementById("name");
-    const emailInput = document.getElementById("email");
-    const list = document.getElementById("profileList");
-    const status = document.getElementById("status");
+    const faqList = document.getElementById("faqList");
+    const faqForm = document.getElementById("faqForm");
+    const categoryInput = document.getElementById("category");
+    const questionInput = document.getElementById("question");
+    const answerInput = document.getElementById("answer");
+    const statusEl = document.getElementById("status");
 
-    async function loadProfiles() {
-      if (!list) return;
+    function setStatus(message, isError = false) {
+      if (!statusEl) return;
+      statusEl.textContent = message;
+      statusEl.classList.toggle("error", isError);
+    }
 
+    function renderFaqs(items) {
+      if (!faqList) return;
+      faqList.innerHTML = "";
+
+      if (!items || items.length === 0) {
+        faqList.innerHTML = "<p>目前沒有 FAQ，先新增一個問題吧。</p>";
+        return;
+      }
+
+      items.forEach((item) => {
+        const article = document.createElement("article");
+        article.className = "faq-item";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "faq-q";
+        button.innerHTML = `
+          <span>${item.category || "其他"}：${item.question}</span>
+          <span class="toggle">＋</span>
+        `;
+
+        const answer = document.createElement("div");
+        answer.className = "faq-a";
+        answer.textContent = item.answer || "尚未填寫回答內容。";
+
+        button.addEventListener("click", () => {
+          article.classList.toggle("open");
+        });
+
+        article.appendChild(button);
+        article.appendChild(answer);
+        faqList.appendChild(article);
+      });
+    }
+
+    async function loadFaqs() {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("faqs")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) {
-        if (status) {
-          status.textContent = "讀取資料失敗: " + error.message;
-        }
+        setStatus("載入 FAQ 失敗: " + error.message, true);
         return;
       }
 
-      list.innerHTML = "";
-
-      if (!data || data.length === 0) {
-        list.innerHTML = "<li>目前沒有資料</li>";
-        return;
-      }
-
-      data.forEach((item) => {
-        const li = document.createElement("li");
-        li.textContent = `${item.name} - ${item.email || "未填寫電子郵件"}`;
-        list.appendChild(li);
-      });
+      renderFaqs(data || []);
     }
 
-    async function addProfile(name, email) {
-      if (!form || !status) return;
+    if (faqForm) {
+      faqForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .insert([{ name, email }])
-        .select();
+        const category = categoryInput?.value?.trim() || "其他";
+        const question = questionInput?.value?.trim() || "";
+        const answer = answerInput?.value?.trim() || "";
 
-      if (error) {
-        status.textContent = "新增失敗: " + error.message;
-        return;
-      }
-
-      status.textContent = "新增成功";
-      form.reset();
-      await loadProfiles();
-    }
-
-    if (form) {
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const name = nameInput?.value.trim() ?? "";
-        const email = emailInput?.value.trim() ?? "";
-
-        if (!name) {
-          if (status) status.textContent = "請輸入姓名";
+        if (!question || !answer) {
+          setStatus("請填寫問題與回答內容。", true);
           return;
         }
 
-        await addProfile(name, email);
+        const { error } = await supabase
+          .from("faqs")
+          .insert([{ category, question, answer }]);
+
+        if (error) {
+          setStatus("新增失敗: " + error.message, true);
+          return;
+        }
+
+        setStatus("新增 FAQ 成功！");
+        faqForm.reset();
+        await loadFaqs();
       });
     }
 
-    loadProfiles();
+    loadFaqs();
   </script>
-</head>
-<body>
-  <h1>Supabase Demo</h1>
-
-  <form id="profileForm">
-    <div>
-      <label for="name">姓名</label><br />
-      <input id="name" type="text" placeholder="請輸入姓名" />
-    </div>
-
-    <div style="margin-top: 10px;">
-      <label for="email">電子郵件</label><br />
-      <input id="email" type="email" placeholder="請輸入電子郵件" />
-    </div>
-
-    <div style="margin-top: 10px;">
-      <button type="submit">新增資料</button>
-    </div>
-  </form>
-
-  <p id="status"></p>
-
-  <h2>資料列表</h2>
-  <ul id="profileList"></ul>
 </body>
 </html>
