@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supabase Demo</title>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // 這裡改成你的 Supabase 值
+    const supabaseUrl = "https://gqiixhloozoputwwdcwg.supabase.co/rest/v1/";
+    const supabaseAnonKey = "sb_publishable_QzmgYNGLkR_4n2T342z9jA_XUQek6i1";
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    const form = document.getElementById("profileForm");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const list = document.getElementById("profileList");
+    const status = document.getElementById("status");
+
+    async function loadProfiles() {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        status.textContent = "讀取資料失敗: " + error.message;
+        return;
+      }
+
+      list.innerHTML = "";
+
+      if (!data || data.length === 0) {
+        list.innerHTML = "<li>目前沒有資料</li>";
+        return;
+      }
+
+      data.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.name} - ${item.email || "未填寫電子郵件"}`;
+        list.appendChild(li);
+      });
+    }
+
+    async function addProfile(name, email) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .insert([{ name, email }])
+        .select();
+
+      if (error) {
+        status.textContent = "新增失敗: " + error.message;
+        return;
+      }
+
+      status.textContent = "新增成功";
+      form.reset();
+      await loadProfiles();
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+
+      if (!name) {
+        status.textContent = "請輸入姓名";
+        return;
+      }
+
+      await addProfile(name, email);
+    });
+
+    loadProfiles();
+  </script>
+</head>
+<body>
+  <h1>Supabase Demo</h1>
+
+  <form id="profileForm">
+    <div>
+      <label for="name">姓名</label><br />
+      <input id="name" type="text" placeholder="請輸入姓名" />
+    </div>
+
+    <div style="margin-top: 10px;">
+      <label for="email">電子郵件</label><br />
+      <input id="email" type="email" placeholder="請輸入電子郵件" />
+    </div>
+
+    <div style="margin-top: 10px;">
+      <button type="submit">新增資料</button>
+    </div>
+  </form>
+
+  <p id="status"></p>
+
+  <h2>資料列表</h2>
+  <ul id="profileList"></ul>
+</body>
+</html>
