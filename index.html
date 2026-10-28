@@ -7,7 +7,7 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // 這裡改成你的 Supabase 值
+    // 重要：這裡要用專案根網址，不是 /rest/v1/
     const supabaseUrl = "https://gqiixhloozoputwwdcwg.supabase.co";
     const supabaseAnonKey = "sb_publishable_QzmgYNGLkR_4n2T342z9jA_XUQek6i1";
 
@@ -20,13 +20,17 @@
     const status = document.getElementById("status");
 
     async function loadProfiles() {
+      if (!list) return;
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) {
-        status.textContent = "讀取資料失敗: " + error.message;
+        if (status) {
+          status.textContent = "讀取資料失敗: " + error.message;
+        }
         return;
       }
 
@@ -37,7 +41,7 @@
         return;
       }
 
-      data.forEach(item => {
+      data.forEach((item) => {
         const li = document.createElement("li");
         li.textContent = `${item.name} - ${item.email || "未填寫電子郵件"}`;
         list.appendChild(li);
@@ -45,6 +49,8 @@
     }
 
     async function addProfile(name, email) {
+      if (!form || !status) return;
+
       const { data, error } = await supabase
         .from("profiles")
         .insert([{ name, email }])
@@ -60,18 +66,21 @@
       await loadProfiles();
     }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = nameInput.value.trim();
-      const email = emailInput.value.trim();
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-      if (!name) {
-        status.textContent = "請輸入姓名";
-        return;
-      }
+        const name = nameInput?.value.trim() ?? "";
+        const email = emailInput?.value.trim() ?? "";
 
-      await addProfile(name, email);
-    });
+        if (!name) {
+          if (status) status.textContent = "請輸入姓名";
+          return;
+        }
+
+        await addProfile(name, email);
+      });
+    }
 
     loadProfiles();
   </script>
